@@ -1,0 +1,15 @@
+export const errorCodes = {
+  invalid: "Error_Invalid",
+  unauthenticated: "Error_Unauthenticated",
+  attack: "Error_Attack",
+  accessTokenExpired: "Error_AccessTokenExpired",
+  userExist: "Error_UserExist",
+  overLimit: "Error_OverLimit",
+  otpExpired: "Error_OtpExpired",
+  requestExpired: "Error_RequestExpired",
+  accountFreeze: "Error_AccountFreeze",
+  notFound: "Error_NotFound",
+  unAuthorised: "Error_UnAuthorised",
+  server: "Error_Server",
+  maintenance: "Error_Maintenance",
+};

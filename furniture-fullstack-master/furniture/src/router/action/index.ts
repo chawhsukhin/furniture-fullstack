@@ -1,0 +1,258 @@
+import { redirect, type ActionFunctionArgs } from "react-router";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+
+import api, { authApi } from "@/api";
+import useAuthStore, { Status } from "@/store/authStore";
+import { queryClient } from "@/api/query";
+
+export const loginAction = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  const credentials = Object.fromEntries(formData);
+
+  try {
+    const response = await authApi.post("login", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Login Failed!" };
+    }
+
+    const redirectTo = new URL(request.url).searchParams.get("redirect") || "/";
+    return redirect(redirectTo);
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Login Failed!" };
+    } else throw error;
+  }
+};
+
+export const logoutAction = async () => {
+  try {
+    await authApi.post("logout");
+    return redirect("/login");
+  } catch (error) {
+    console.error("logout failed!", error);
+    return redirect("/login");
+  }
+};
+
+export const registerAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+  const formData = await request.formData();
+  const credentials = Object.fromEntries(formData);
+
+  try {
+    const response = await authApi.post("register", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Sending OTP failed!" };
+    }
+
+    authStore.setAuth(response.data.phone, response.data.token, Status.otp);
+
+    return redirect("/register/otp");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Sending OTP failed!" };
+    } else throw error;
+  }
+};
+
+export const otpAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+  const formData = await request.formData();
+
+  const credentials = {
+    phone: authStore.phone,
+    otp: formData.get("otp"),
+    token: authStore.token,
+  };
+
+  try {
+    const response = await authApi.post("verify-otp", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Verifying OTP failed!" };
+    }
+
+    authStore.setAuth(response.data.phone, response.data.token, Status.confirm);
+
+    return redirect("/register/confirm-password");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Verifying OTP failed!" };
+    } else throw error;
+  }
+};
+
+export const confirmAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+  const formData = await request.formData();
+
+  const credentials = {
+    phone: authStore.phone,
+    password: formData.get("password"),
+    token: authStore.token,
+  };
+
+  try {
+    const response = await authApi.post("confirm-password", credentials);
+
+    if (response.status !== 201) {
+      return { error: response.data || "Registration failed!" };
+    }
+
+    authStore.clearAuth();
+
+    return redirect("/");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Registration failed!" };
+    } else throw error;
+  }
+};
+
+export const favouriteAction = async ({
+  request,
+  params,
+}: ActionFunctionArgs) => {
+  const formData = await request.formData();
+  if (!params.productId) {
+    throw new Error("No Product ID provided");
+  }
+
+  const data = {
+    productId: Number(params.productId),
+    favourite: formData.get("favourite") === "true", // true
+  };
+
+  try {
+    const response = await api.patch("users/products/toggle-favourite", data);
+    if (response.status !== 200) {
+      return { error: response.data || "Setting favourite Failed!" };
+    }
+
+    await queryClient.invalidateQueries({
+      queryKey: ["products", "detail", params.productId],
+    });
+
+    return null;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Setting favourite failed!" };
+    } else throw error;
+  }
+};
+
+export const resetAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+
+  const formData = await request.formData();
+  const credentials = Object.fromEntries(formData);
+
+  try {
+    const response = await authApi.post("forget-password", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Sending OTP failed!" };
+    }
+
+    authStore.setAuth(response.data.phone, response.data.token, Status.verify);
+
+    return redirect("/reset/verify");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Sending OTP failed!" };
+    } else throw error;
+  }
+};
+
+export const verifyAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+  const formData = await request.formData();
+
+  const credentials = {
+    phone: authStore.phone,
+    otp: formData.get("otp"),
+    token: authStore.token,
+  };
+
+  try {
+    const response = await authApi.post("verify", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Verifying OTP failed!" };
+    }
+
+    authStore.setAuth(response.data.phone, response.data.token, Status.reset);
+
+    return redirect("/reset/new-password");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Verifying OTP failed!" };
+    } else throw error;
+  }
+};
+
+export const newPasswordAction = async ({ request }: ActionFunctionArgs) => {
+  const authStore = useAuthStore.getState();
+  const formData = await request.formData();
+
+  const credentials = {
+    phone: authStore.phone,
+    password: formData.get("password"),
+    token: authStore.token,
+  };
+
+  try {
+    const response = await authApi.post("reset-password", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Resetting failed!" };
+    }
+
+    authStore.clearAuth();
+
+    return redirect("/");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return error.response?.data || { error: "Resetting failed!" };
+    } else throw error;
+  }
+};
+
+export const changePasswordAction = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData();
+
+  const credentials = {
+    oldPassword: formData.get("oldPassword"),
+    newPassword: formData.get("newPassword"),
+  };
+
+  try {
+    const response = await api.patch("users/change-password", credentials);
+
+    if (response.status !== 200) {
+      return { error: response.data || "Password change failed!" };
+    }
+
+    // Show success toast using the translated message from the backend
+    if (response.data?.message) {
+      toast.success(response.data.message);
+    } else {
+      toast.success("Password changed successfully.");
+    }
+
+    return redirect("/");
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const errorData = error.response?.data;
+      // Show error toast with the backend's translated message
+      const errorMessage =
+        errorData?.message || errorData?.error || "Password change failed!";
+      toast.error(errorMessage);
+      // Return error data so the form displays it inline too (stays on page)
+      return { message: errorMessage, error: errorMessage };
+    } else throw error;
+  }
+};

@@ -1,0 +1,40 @@
+{
+  "welcome": "Welcome to our furniture shop.",
+  "wrongPasswd": "Password is wrong.",
+  "changeLan": "Successfully changed language - {{ lang }}.",
+
+  "unauthenticated": "You are not an authenticated user.",
+  "accountFreeze": "Your account is temporarily locked. Please contact us.",
+  "accountNotExist": "This account does not exist.",
+  "accountExist": "This account already exists.",
+
+  "invalidPhone": "Invalid phone number.",
+  "invalidOtp": "Invalid OTP.",
+  "invalidToken": "Invalid token.",
+  "invalidPasswd": "Password must be 8 digits.",
+
+  "otpSending": "We are sending OTP to 09{{ phone }}.",
+  "otpSendingReset": "We are sending OTP to 09{{ phone }} to reset password.",
+  "otpVerified": "OTP is successfully verified.",
+  "otpVerifiedReset": "OTP is successfully verified to reset password.",
+  "otpIncorrect": "OTP is incorrect.",
+  "otpExpired": "OTP is expired.",
+  "otpOverLimit": "OTP is allowed to request 3 times per day.",
+
+  "requestExpired": "Your request is expired. Please try again.",
+  "requestAttack": "This request may be an attack.",
+  "requestAttackTryTomorrow": "This request may be an attack. If not, try again tomorrow.",
+
+  "registerSuccess": "Successfully created an account.",
+  "loginSuccess": "Successfully logged in.",
+  "logoutSuccess": "Successfully logged out. See you soon.",
+
+  "oldPasswdWrong": "Old password is incorrect.",
+  "samePasswd": "New password must be different from old password.",
+  "passwdChanged": "Password changed successfully.",
+  "passwdReset": "Successfully reset your password.",
+
+  "actionNotAllowed": "This action is not allowed.",
+  "dataNotExist": "This data model does not exist.",
+  "maintenance": "We are under maintenance. Please try again later."
+}
